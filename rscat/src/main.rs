@@ -27,7 +27,7 @@ struct Args {
     number_nonblank: bool
 }
 
-fn print_file(f_path: File) -> std::io::Result<()> {
+fn print_file(f_path: File, line_counter: &mut usize) -> std::io::Result<()> {
     // Decreases system calls by buffering file
     let mut reader = BufReader::new(f_path);
     let mut line = String::new();
@@ -44,30 +44,44 @@ fn print_file(f_path: File) -> std::io::Result<()> {
         }
 
         // TODO Lock stdout before loop
-        print!("{line}");
+        print!("\t{}  {}", *line_counter, line);
+        *line_counter += 1;
     }
 }
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
-    dbg!(&args);
 
     // TODO Check if args.file is empty
     // If it is, read from stdin
 
-    // let Some(first_file) = args.file.get(0) else {
-    //     eprintln!("No file provided!");
-    //     std::process::exit(1);
-    // };
+    // TODO Check if all files exist before starting
+
+    // TODO What if file is not ascii?
 
     // Iterate over all files
     // Concatenation will happen because files will be printed out in order
+
+    let mut line_counter = 0;
     for file_name in &args.file {
         // TODO Treat for -
 
-        // FIXME: This does not end program. Should it?
-        let f = File::open(file_name)?;
-        print_file(f)?;
+        let file = match File::open(file_name) {
+            Ok(f) => f,
+            Err(_) => {
+                eprintln!("Failed to open file");
+                std::process::exit(1);
+            }
+        };
+
+        match print_file(file, &mut line_counter) {
+            Ok(()) => (),
+            Err(_) => {
+                println!("Error printing file");
+                std::process::exit(1);
+            }
+        }
     }
+
     Ok(())
 }
