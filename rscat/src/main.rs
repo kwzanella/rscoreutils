@@ -18,38 +18,56 @@ use clap::{Parser, command};
 #[derive(Parser, Debug)]
 #[command(version, long_about = "Concatenate FILE(s) to standard output.")]
 struct Args {
-    // number all output lines
-    #[arg(short, long, help = "teste")]
+    file: Vec<String>,
+
+    #[arg(short, long, help = "number all output lines")]
     number: bool,
 
-    // number nonempty output lines, overrides -n
-    #[arg(short = 'b', long, help = "teste2")]
+    #[arg(short = 'b', long, help = "number nonempty output lines, overrides -n")]
     number_nonblank: bool
+}
+
+fn print_file(f_path: File) -> std::io::Result<()> {
+    // Decreases system calls by buffering file
+    let mut reader = BufReader::new(f_path);
+    let mut line = String::new();
+    let mut num_bytes: usize;
+    loop {
+        // Clear buffer before reading next line
+        line.clear();
+
+        num_bytes = reader.read_line(&mut line)?;
+
+        // EOF has been found
+        if num_bytes == 0 {
+            return Ok(());
+        }
+
+        // TODO Lock stdout before loop
+        print!("{line}");
+    }
 }
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
     dbg!(&args);
-    return Ok(());
 
+    // TODO Check if args.file is empty
+    // If it is, read from stdin
 
-    let f = File::open("poem.txt")?;
+    // let Some(first_file) = args.file.get(0) else {
+    //     eprintln!("No file provided!");
+    //     std::process::exit(1);
+    // };
 
-    // Decreases system calls by buffering file
-    let mut reader = BufReader::new(f);
-    let mut line = String::new();
+    // Iterate over all files
+    // Concatenation will happen because files will be printed out in order
+    for file_name in &args.file {
+        // TODO Treat for -
 
-    loop {
-        line.clear();
-
-        let num_bytes = reader.read_line(&mut line)?;
-
-        if num_bytes == 0 {
-            break;  // EOF has been found
-        }
-
-        print!("{line}");
+        // FIXME: This does not end program. Should it?
+        let f = File::open(file_name)?;
+        print_file(f)?;
     }
-
     Ok(())
 }
