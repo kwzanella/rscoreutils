@@ -1,34 +1,41 @@
-// use std::{env, fs};
+// https://nnethercote.github.io/perf-book/io.html
 
-// // static FILE_PATH: &str = "teste.txt";
-
-// // file_path needs to be passed as reference (borrowing). Otherwise, the ownership of the object will be passed here
-// // fn cat() {
-// //     dbg!(FILE_PATH);
-// // }
-
-// fn main() {
-//     let args: Vec<String> = env::args().collect();
-//     dbg!(args);
-//     let contents = fs::read_to_string(FILE_PATH)
-//         .expect("Should have been able to read the file");
-// }
-
-/* TODO:
- * 1. Make cat work
- * 2. Make cat or cat - take input from stdin
- * 3. Use buffered read
- * 4. Implement line number argument
- * 5. Use benchmarking tools to improve on the code and test difference between buffered read and normal read (use perf, hotspot, criterion, etc)
- *    a. https://nnethercote.github.io/perf-book/io.html
- * 6. Try and experiment with multiple approachs to optmize the code
+/*
+ * 1. Concatenate multiples files
+ * 2. Print to STDOUT
+ * 3. Get input from STDIN with - or without any arg
+ * 4. --number
+ * 5. --number-nonblank
+ * 6. --help
+ * 7. --version
+ * 8. Integration tests
 */
 
 use std::io::{BufRead, BufReader};
 use std::fs::File;
+use clap::{Parser, command};
+
+#[derive(Parser, Debug)]
+#[command(version, long_about = "Concatenate FILE(s) to standard output.")]
+struct Args {
+    // number all output lines
+    #[arg(short, long, help = "teste")]
+    number: bool,
+
+    // number nonempty output lines, overrides -n
+    #[arg(short = 'b', long, help = "teste2")]
+    number_nonblank: bool
+}
 
 fn main() -> std::io::Result<()> {
-    let f = File::open("heavy-test.txt")?;
+    let args = Args::parse();
+    dbg!(&args);
+    return Ok(());
+
+
+    let f = File::open("poem.txt")?;
+
+    // Decreases system calls by buffering file
     let mut reader = BufReader::new(f);
     let mut line = String::new();
 
